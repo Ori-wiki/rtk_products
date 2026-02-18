@@ -35,8 +35,6 @@ const Products: React.FC = () => {
     token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken();
 
-  // const [products, setProducts] = useState<IProduct[]>([]);
-  // const [isLoading, setIsLoading] = useState(false);
   const dispatch = useAppDispatch();
   const products = useAppSelector(getProducts);
   const isLoading = useAppSelector(getProductsLoadingStatus);
@@ -103,47 +101,53 @@ const Products: React.FC = () => {
               <Spin size='large' />
             </Flex>
           ) : (
-            <Row gutter={[16, 16]}>
+            <Row gutter={[16, 16]} justify='center'>
               {products.map((product) => (
-                <Col span={4} key={product.id}>
+                <Col
+                  key={product.id}
+                  flex='0 0 280px'
+                  style={{ display: 'flex', justifyContent: 'center' }}
+                >
                   <Card
                     hoverable
                     style={{
-                      width: '100%',
-                      height: '490px',
+                      width: 280,
+                      minWidth: 280,
+                      height: '100%',
+                      display: 'flex',
+                      flexDirection: 'column',
+                    }}
+                    bodyStyle={{
+                      flex: 1,
+                      display: 'flex',
+                      flexDirection: 'column',
                     }}
                     cover={
                       <img
                         draggable={false}
                         alt={product.title}
                         src={product.thumbnail}
-                        style={{ height: '260px' }}
+                        style={{ height: '260px', objectFit: 'cover' }}
                       />
                     }
                   >
-                    <Meta
-                      title={product.title}
-                      description={
-                        <Flex
-                          vertical
-                          gap={6}
-                          justify='space-between'
-                          style={{ minHeight: '120px' }}
-                        >
-                          <Typography.Text>
-                            {product.description.length > 100
-                              ? product.description.slice(0, 100) + '...'
-                              : product.description}
-                          </Typography.Text>
-                          <Typography.Text
-                            style={{ fontWeight: 'bold' }}
-                          >{`$${product.price}`}</Typography.Text>
-                          <Button onClick={() => dispatch(addToCart(product))}>
-                            Добавить в корзину
-                          </Button>
-                        </Flex>
-                      }
-                    />
+                    <Meta title={product.title} />
+                    <Flex vertical gap={6} style={{ flex: 1, marginTop: 12 }}>
+                      <Typography.Text>
+                        {product.description.length > 100
+                          ? product.description.slice(0, 100) + '...'
+                          : product.description}
+                      </Typography.Text>
+                      <Typography.Text style={{ fontWeight: 'bold' }}>
+                        {`$${product.price}`}
+                      </Typography.Text>
+                      <Button
+                        style={{ marginTop: 'auto' }}
+                        onClick={() => dispatch(addToCart(product))}
+                      >
+                        Добавить в корзину
+                      </Button>
+                    </Flex>
                   </Card>
                 </Col>
               ))}

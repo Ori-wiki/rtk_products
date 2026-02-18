@@ -50,7 +50,7 @@ function App() {
         onClick={showModal}
         style={{ width: '50px', height: '50px' }}
         tooltip='Корзина'
-        badge={{ count: 4, color: 'red' }}
+        badge={{ count: cart?.totalProducts || 0, color: 'red' }}
         icon={<ShoppingCartOutlined />}
       />
       <Modal
@@ -75,7 +75,6 @@ function App() {
       >
         {cart && cart.products.length > 0 ? (
           <Flex vertical gap={16}>
-            {/* Список товаров */}
             <Flex vertical gap={8}>
               {cart.products.map((product) => (
                 <Flex
