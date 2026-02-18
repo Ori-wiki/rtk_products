@@ -21,7 +21,8 @@ export const counterSlice = createSlice({
     },
   },
 });
-const { increment, decrement } = counterSlice.actions;
+const { reducer: counterReducer, actions } = counterSlice;
+const { increment, decrement } = actions;
 
 export const getCount = (state: RootState) => state.counter.value;
 
@@ -32,4 +33,4 @@ export const decrementBy = (value: number) => (dispatch: Dispatch) => {
   dispatch(decrement(value));
 };
 
-export default counterSlice.reducer;
+export default counterReducer;
