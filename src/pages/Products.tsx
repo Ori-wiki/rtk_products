@@ -24,6 +24,7 @@ import {
   loadProductsList,
 } from '../store/products';
 import { useAppDispatch, useAppSelector } from '../hooks/reduxhook';
+import { addToCart } from '../store/cart';
 const { Meta } = Card;
 
 const { Header, Sider, Content } = Layout;
@@ -109,7 +110,7 @@ const Products: React.FC = () => {
                     hoverable
                     style={{
                       width: '100%',
-                      height: '450px',
+                      height: '490px',
                     }}
                     cover={
                       <img
@@ -125,7 +126,7 @@ const Products: React.FC = () => {
                       description={
                         <Flex
                           vertical
-                          gap={8}
+                          gap={6}
                           justify='space-between'
                           style={{ minHeight: '120px' }}
                         >
@@ -137,6 +138,9 @@ const Products: React.FC = () => {
                           <Typography.Text
                             style={{ fontWeight: 'bold' }}
                           >{`$${product.price}`}</Typography.Text>
+                          <Button onClick={() => dispatch(addToCart(product))}>
+                            Добавить в корзину
+                          </Button>
                         </Flex>
                       }
                     />

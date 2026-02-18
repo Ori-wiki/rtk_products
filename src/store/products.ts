@@ -4,9 +4,13 @@ import type { RootState } from './store';
 export interface IProduct {
   id: number;
   title: string;
-  description: string;
-  thumbnail: string;
   price: number;
+  quantity: number;
+  total: number;
+  discountPercentage: number;
+  discountedTotal: number;
+  thumbnail: string;
+  description: string;
 }
 
 export interface IProductState {
@@ -26,18 +30,17 @@ export const productsSlice = createSlice({
   name: 'products',
   initialState,
   reducers: {
-    //1 Отправляем запрос на сервер, ставим isLoading в true
     productsRequested: (state) => {
       state.isLoading = true;
       state.error = null;
     },
-    //2 Получеам продукты
+
     productsReceived: (state, action: { payload: IProduct[] }) => {
       state.entitties = action.payload;
       state.isLoading = false;
       state.lastFetch = new Date().toISOString();
     },
-    //3 обрабатываем ошибку
+
     productsRequestFailed: (state, action: { payload: string }) => {
       state.isLoading = false;
       state.error = action.payload;
@@ -60,7 +63,7 @@ export const loadProductsList =
       try {
         const res = await fetch('https://dummyjson.com/products');
         if (!res.ok) {
-          throw new Error('Failed to fetch products');
+          throw new Error('Не удалось загрузить продукты');
         }
         const data = await res.json();
         dispatch(productsReceived(data.products));
