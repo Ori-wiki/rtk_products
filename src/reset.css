@@ -109,3 +109,13 @@ legend {
 input[type='file'] {
   max-width: 100%;
 }
+/* Header nav: keep selected item without solid blue background */
+.site-header-menu.ant-menu .ant-menu-item-selected {
+  background-color: transparent !important;
+}
+
+.site-header-menu.ant-menu-dark,
+.site-header-menu.ant-menu-dark .ant-menu-sub,
+.site-header-menu.ant-menu-dark.ant-menu-inline {
+  background: transparent !important;
+}

@@ -42,7 +42,7 @@ const CartModal: React.FC<CartModalProps> = ({ open, cart, onClose }) => {
           }}
           disabled={!cart.totalProducts}
         >
-          Перейти к checkout
+          Перейти к оформлению
         </Button>,
       ]}
       width={680}

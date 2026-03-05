@@ -9,6 +9,7 @@ import {
   Menu,
   Space,
   Switch,
+  theme,
   Typography,
 } from 'antd';
 import {
@@ -38,6 +39,9 @@ const SiteHeader: React.FC<SiteHeaderProps> = ({
   darkMode,
   onThemeToggle,
 }) => {
+  const {
+    token: { colorBgContainer, colorBorderSecondary },
+  } = theme.useToken();
   const screens = useBreakpoint();
   const isMobile = !screens.md;
   const location = useLocation();
@@ -56,7 +60,7 @@ const SiteHeader: React.FC<SiteHeaderProps> = ({
       label: <Link to={ROUTES.favorites}>Избранное</Link>,
       icon: <HeartOutlined />,
     },
-    { key: 'checkout', label: <Link to={ROUTES.checkout}>Checkout</Link> },
+    { key: 'checkout', label: <Link to={ROUTES.checkout}>Оформление</Link> },
   ];
 
   return (
@@ -69,6 +73,9 @@ const SiteHeader: React.FC<SiteHeaderProps> = ({
         alignItems: 'center',
         justifyContent: 'space-between',
         paddingInline: 16,
+        background: colorBgContainer,
+        borderBottom: `1px solid ${colorBorderSecondary}`,
+        overflow: 'visible',
       }}
     >
       <Flex align='center' gap={16}>
@@ -76,14 +83,16 @@ const SiteHeader: React.FC<SiteHeaderProps> = ({
           <Button type='text' icon={<MenuOutlined />} onClick={() => setOpen(true)} />
         )}
         <Title level={4} style={{ margin: 0 }}>
-          <Link to={ROUTES.products}>Store</Link>
+          <Link to={ROUTES.products}>Магазин</Link>
         </Title>
         {!isMobile && (
           <Menu
+            className='site-header-menu'
+            theme={darkMode ? 'dark' : 'light'}
             mode='horizontal'
             selectedKeys={[selectedKey]}
             items={items}
-            style={{ minWidth: 360, borderBottom: 'none' }}
+            style={{ minWidth: 360, borderBottom: 'none', background: 'transparent' }}
           />
         )}
       </Flex>
@@ -95,7 +104,7 @@ const SiteHeader: React.FC<SiteHeaderProps> = ({
           checkedChildren={<MoonOutlined />}
           unCheckedChildren={<SunOutlined />}
         />
-        <Badge count={cartCount} size='small'>
+        <Badge count={cartCount} size='small' offset={[-2, 8]}>
           <Button
             type='text'
             icon={<ShoppingCartOutlined />}
@@ -115,9 +124,12 @@ const SiteHeader: React.FC<SiteHeaderProps> = ({
         size='default'
       >
         <Menu
+          className='site-header-menu'
+          theme={darkMode ? 'dark' : 'light'}
           mode='inline'
           selectedKeys={[selectedKey]}
           items={items}
+          style={{ background: 'transparent' }}
           onClick={() => setOpen(false)}
         />
       </Drawer>

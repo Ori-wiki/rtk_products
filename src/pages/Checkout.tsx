@@ -35,7 +35,7 @@ const Checkout: React.FC = () => {
 
   return (
     <PageContent>
-      <Title level={3}>Checkout</Title>
+      <Title level={3}>Оформление заказа</Title>
       <Card style={{ maxWidth: 720 }}>
         <Text style={{ display: 'block', marginBottom: 16 }}>
           {`Товаров: ${cart.totalQuantity}, сумма: $${cart.total.toFixed(2)}`}
