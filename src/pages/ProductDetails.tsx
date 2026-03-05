@@ -11,6 +11,7 @@ import {
   Row,
   Skeleton,
   Tag,
+  theme,
   Typography,
   message,
 } from 'antd';
@@ -29,6 +30,9 @@ import { getProductById } from '../store/products';
 const { Title, Text, Paragraph } = Typography;
 
 const ProductDetails: React.FC = () => {
+  const {
+    token: { colorFillAlter },
+  } = theme.useToken();
   const { id } = useParams();
   const productId = Number(id);
   const dispatch = useAppDispatch();
@@ -66,11 +70,23 @@ const ProductDetails: React.FC = () => {
             <Carousel arrows draggable>
               {product.images.map((image) => (
                 <div key={image}>
-                  <img
-                    src={image}
-                    alt={product.title}
-                    style={{ width: '100%', height: 360, objectFit: 'cover' }}
-                  />
+                  <div
+                    style={{
+                      width: '100%',
+                      height: 360,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      background: colorFillAlter,
+                      padding: 12,
+                    }}
+                  >
+                    <img
+                      src={image}
+                      alt={product.title}
+                      style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                    />
+                  </div>
                 </div>
               ))}
             </Carousel>

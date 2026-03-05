@@ -6,6 +6,7 @@ import {
   Rate,
   Space,
   Tag,
+  theme,
   Tooltip,
   Typography,
 } from 'antd';
@@ -35,6 +36,10 @@ const ProductCard: React.FC<ProductCardProps> = ({
   onDecrement,
   onToggleFavorite,
 }) => {
+  const {
+    token: { colorFillAlter },
+  } = theme.useToken();
+
   return (
     <Card
       hoverable
@@ -53,12 +58,23 @@ const ProductCard: React.FC<ProductCardProps> = ({
         },
       }}
       cover={
-        <img
-          draggable={false}
-          alt={product.title}
-          src={product.thumbnail}
-          style={{ height: '220px', objectFit: 'cover' }}
-        />
+        <div
+          style={{
+            height: 220,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: colorFillAlter,
+            padding: 8,
+          }}
+        >
+          <img
+            draggable={false}
+            alt={product.title}
+            src={product.thumbnail}
+            style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+          />
+        </div>
       }
       actions={[
         <Tooltip key='favorite' title='В избранное'>
