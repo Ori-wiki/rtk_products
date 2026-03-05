@@ -44,8 +44,9 @@ const ProductCard: React.FC<ProductCardProps> = ({
     <Card
       hoverable
       style={{
-        width: 280,
-        minWidth: 280,
+        width: '100%',
+        maxWidth: 280,
+        minWidth: 0,
         height: '100%',
         display: 'flex',
         flexDirection: 'column',

@@ -30,10 +30,17 @@ const ProductsGrid: React.FC<ProductsGridProps> = ({
 }) => {
   if (isLoading) {
     return (
-      <Row gutter={[16, 16]}>
+      <Row gutter={[16, 16]} justify='center'>
         {Array.from({ length: 8 }).map((_, index) => (
-          <Col key={index} xs={24} sm={12} md={8} lg={6}>
-            <Space orientation='vertical' style={{ width: '100%' }}>
+          <Col
+            key={index}
+            xs={24}
+            sm={12}
+            md={8}
+            lg={6}
+            style={{ display: 'flex', justifyContent: 'center' }}
+          >
+            <Space orientation='vertical' style={{ width: '100%', maxWidth: 280 }}>
               <Skeleton.Image style={{ width: '100%', height: 220 }} active />
               <Skeleton active paragraph={{ rows: 3 }} />
             </Space>
@@ -63,9 +70,17 @@ const ProductsGrid: React.FC<ProductsGridProps> = ({
   }
 
   return (
-    <Row gutter={[16, 16]} justify='start'>
+    <Row gutter={[16, 16]} justify='center'>
       {products.map((product) => (
-        <Col key={product.id} xs={24} sm={12} md={8} lg={6} xl={6}>
+        <Col
+          key={product.id}
+          xs={24}
+          sm={12}
+          md={8}
+          lg={6}
+          xl={6}
+          style={{ display: 'flex', justifyContent: 'center' }}
+        >
           <ProductCard
             product={product}
             cartQuantity={cartQuantityById[product.id] ?? 0}

@@ -44,6 +44,7 @@ const SiteHeader: React.FC<SiteHeaderProps> = ({
   } = theme.useToken();
   const screens = useBreakpoint();
   const isMobile = !screens.md;
+  const isSmallMobile = !screens.sm;
   const location = useLocation();
   const [open, setOpen] = useState(false);
 
@@ -72,17 +73,17 @@ const SiteHeader: React.FC<SiteHeaderProps> = ({
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        paddingInline: 16,
+        paddingInline: isSmallMobile ? 8 : 16,
         background: colorBgContainer,
         borderBottom: `1px solid ${colorBorderSecondary}`,
         overflow: 'visible',
       }}
     >
-      <Flex align='center' gap={16}>
+      <Flex align='center' gap={isSmallMobile ? 8 : 16} style={{ minWidth: 0 }}>
         {isMobile && (
           <Button type='text' icon={<MenuOutlined />} onClick={() => setOpen(true)} />
         )}
-        <Title level={4} style={{ margin: 0 }}>
+        <Title level={isSmallMobile ? 5 : 4} style={{ margin: 0, whiteSpace: 'nowrap' }}>
           <Link to={ROUTES.products}>Магазин</Link>
         </Title>
         {!isMobile && (
@@ -97,15 +98,22 @@ const SiteHeader: React.FC<SiteHeaderProps> = ({
         )}
       </Flex>
 
-      <Space>
+      <Space size={isSmallMobile ? 4 : 8} style={{ flexShrink: 0 }}>
         <Switch
+          size={isSmallMobile ? 'small' : 'default'}
           checked={darkMode}
           onChange={onThemeToggle}
           checkedChildren={<MoonOutlined />}
           unCheckedChildren={<SunOutlined />}
         />
-        <Badge count={cartCount} size='small' offset={[-2, 8]}>
+        <Badge
+          count={cartCount}
+          size='small'
+          overflowCount={99}
+          offset={isSmallMobile ? [-1, 5] : [-2, 8]}
+        >
           <Button
+            size={isSmallMobile ? 'small' : 'middle'}
             type='text'
             icon={<ShoppingCartOutlined />}
             onClick={onOpenCart}
