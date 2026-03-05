@@ -1,161 +1,93 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
+import { message } from 'antd';
+import PageContent from '../components/layout/PageContent';
+import ProductsFilters from '../components/products/ProductsFilters';
+import ProductsGrid from '../components/products/ProductsGrid';
+import { useCatalogFilters } from '../hooks/useCatalogFilters';
+import { useAppDispatch, useAppSelector } from '../hooks/reduxhook';
 import {
-  MenuFoldOutlined,
-  MenuUnfoldOutlined,
-  UploadOutlined,
-  UserOutlined,
-  VideoCameraOutlined,
-} from '@ant-design/icons';
+  addToCart,
+  decrementCartItem,
+  getCartQuantityById,
+  incrementCartItem,
+} from '../store/cart';
+import { getFavoriteIds, toggleFavorite } from '../store/favorites';
 import {
-  Button,
-  Layout,
-  Menu,
-  theme,
-  Card,
-  Col,
-  Row,
-  Flex,
-  Typography,
-  Spin,
-} from 'antd';
-import {
+  getProductCategories,
   getProducts,
+  getProductsError,
   getProductsLoadingStatus,
+  type IProduct,
   loadProductsList,
 } from '../store/products';
-import { useAppDispatch, useAppSelector } from '../hooks/reduxhook';
-import { addToCart } from '../store/cart';
-const { Meta } = Card;
-
-const { Header, Sider, Content } = Layout;
 
 const Products: React.FC = () => {
-  const [collapsed, setCollapsed] = useState(false);
-  const {
-    token: { colorBgContainer, borderRadiusLG },
-  } = theme.useToken();
-
   const dispatch = useAppDispatch();
   const products = useAppSelector(getProducts);
+  const categories = useAppSelector(getProductCategories);
   const isLoading = useAppSelector(getProductsLoadingStatus);
+  const error = useAppSelector(getProductsError);
+  const favoriteIds = useAppSelector(getFavoriteIds);
+  const cartQuantityById = useAppSelector(getCartQuantityById);
+  const {
+    filters,
+    visibleProducts,
+    setSearch,
+    setCategory,
+    setSort,
+    setMinRating,
+    setPriceRange,
+    reset,
+  } = useCatalogFilters(products);
 
   useEffect(() => {
     dispatch(loadProductsList());
   }, [dispatch]);
 
+  const handleAddToCart = (product: IProduct) => {
+    dispatch(addToCart(product));
+    message.success('Товар добавлен в корзину');
+  };
+
+  const handleToggleFavorite = (productId: number) => {
+    const isCurrentlyFavorite = favoriteIds.includes(productId);
+    dispatch(toggleFavorite(productId));
+    message.success(
+      isCurrentlyFavorite ? 'Удалено из избранного' : 'Добавлено в избранное',
+    );
+  };
+
   return (
-    <Layout style={{ width: '100%', minHeight: '100vh', height: '100%' }}>
-      <Sider trigger={null} collapsible collapsed={collapsed}>
-        <div className='demo-logo-vertical' />
-        <Menu
-          theme='dark'
-          mode='inline'
-          defaultSelectedKeys={['1']}
-          items={[
-            {
-              key: '1',
-              icon: <UserOutlined />,
-              label: 'nav 1',
-            },
-            {
-              key: '2',
-              icon: <VideoCameraOutlined />,
-              label: 'nav 2',
-            },
-            {
-              key: '3',
-              icon: <UploadOutlined />,
-              label: 'nav 3',
-            },
-          ]}
-        />
-      </Sider>
-      <Layout>
-        <Header style={{ padding: 0, background: colorBgContainer }}>
-          <Button
-            type='text'
-            icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-            onClick={() => setCollapsed(!collapsed)}
-            style={{
-              fontSize: '16px',
-              width: 64,
-              height: 64,
-            }}
-          />
-        </Header>
-        <Content
-          style={{
-            margin: '24px 16px',
-            padding: 24,
-            minHeight: 280,
-            background: colorBgContainer,
-            borderRadius: borderRadiusLG,
-          }}
-        >
-          {isLoading ? (
-            <Flex
-              justify='center'
-              align='center'
-              style={{ height: '100%', width: '100%' }}
-            >
-              <Spin size='large' />
-            </Flex>
-          ) : (
-            <Row gutter={[16, 16]} justify='center'>
-              {products.map((product) => (
-                <Col
-                  key={product.id}
-                  flex='0 0 280px'
-                  style={{ display: 'flex', justifyContent: 'center' }}
-                >
-                  <Card
-                    hoverable
-                    style={{
-                      width: 280,
-                      minWidth: 280,
-                      height: '100%',
-                      display: 'flex',
-                      flexDirection: 'column',
-                    }}
-                    bodyStyle={{
-                      flex: 1,
-                      display: 'flex',
-                      flexDirection: 'column',
-                    }}
-                    cover={
-                      <img
-                        draggable={false}
-                        alt={product.title}
-                        src={product.thumbnail}
-                        style={{ height: '260px', objectFit: 'cover' }}
-                      />
-                    }
-                  >
-                    <Meta title={product.title} />
-                    <Flex vertical gap={6} style={{ flex: 1, marginTop: 12 }}>
-                      <Typography.Text>
-                        {product.description.length > 100
-                          ? product.description.slice(0, 100) + '...'
-                          : product.description}
-                      </Typography.Text>
-                      <Typography.Text style={{ fontWeight: 'bold' }}>
-                        {`$${product.price}`}
-                      </Typography.Text>
-                      <Button
-                        style={{ marginTop: 'auto' }}
-                        onClick={() => dispatch(addToCart(product))}
-                      >
-                        Добавить в корзину
-                      </Button>
-                    </Flex>
-                  </Card>
-                </Col>
-              ))}
-            </Row>
-          )}
-        </Content>
-      </Layout>
-    </Layout>
+    <PageContent>
+      <ProductsFilters
+        search={filters.search}
+        category={filters.category}
+        sort={filters.sort}
+        minPrice={filters.minPrice}
+        maxPrice={filters.maxPrice}
+        minRating={filters.minRating}
+        categories={categories}
+        onSearchChange={setSearch}
+        onCategoryChange={setCategory}
+        onSortChange={setSort}
+        onPriceChange={([min, max]) => setPriceRange(min, max)}
+        onMinRatingChange={setMinRating}
+        onReset={reset}
+      />
+
+      <ProductsGrid
+        products={visibleProducts}
+        isLoading={isLoading}
+        error={error}
+        cartQuantityById={cartQuantityById}
+        favoriteIds={favoriteIds}
+        onAddToCart={handleAddToCart}
+        onIncrement={(id) => dispatch(incrementCartItem(id))}
+        onDecrement={(id) => dispatch(decrementCartItem(id))}
+        onToggleFavorite={handleToggleFavorite}
+        onRetry={() => dispatch(loadProductsList(true))}
+      />
+    </PageContent>
   );
 };
 

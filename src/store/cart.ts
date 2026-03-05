@@ -1,156 +1,133 @@
-import { createSlice, type Dispatch } from '@reduxjs/toolkit';
+import { createSelector, createSlice } from '@reduxjs/toolkit';
 import type { RootState } from './store';
 import type { IProduct } from './products';
 
-export interface ICart {
-  id: number;
-  products: IProduct[];
+export interface ICartProduct extends IProduct {
+  quantity: number;
   total: number;
   discountedTotal: number;
-  userId: number;
+}
+
+export interface ICart {
+  products: ICartProduct[];
+  total: number;
+  discountedTotal: number;
   totalProducts: number;
   totalQuantity: number;
 }
 
 export interface ICartState {
-  entity: ICart | null;
-  isLoading: boolean;
-  error: string | null;
+  entity: ICart;
 }
-const initialState: ICartState = {
-  entity: null,
-  isLoading: false,
-  error: null,
+
+const createEmptyCart = (): ICart => ({
+  products: [],
+  total: 0,
+  discountedTotal: 0,
+  totalProducts: 0,
+  totalQuantity: 0,
+});
+
+const recalculateCart = (cart: ICart) => {
+  cart.total = cart.products.reduce((sum, product) => sum + product.total, 0);
+  cart.discountedTotal = cart.products.reduce(
+    (sum, product) => sum + product.discountedTotal,
+    0,
+  );
+  cart.totalProducts = cart.products.length;
+  cart.totalQuantity = cart.products.reduce((sum, product) => sum + product.quantity, 0);
 };
 
-export const cartSlice = createSlice({
+const initialState: ICartState = {
+  entity: createEmptyCart(),
+};
+
+const cartSlice = createSlice({
   name: 'cart',
   initialState,
   reducers: {
-    cartRequested: (state) => {
-      state.isLoading = true;
-      state.error = null;
-    },
-
-    cartReceived: (state, action: { payload: ICart }) => {
+    replaceCart: (state, action: { payload: ICart }) => {
       state.entity = action.payload;
-      state.isLoading = false;
-    },
-
-    cartRequestFailed: (state, action: { payload: string }) => {
-      state.isLoading = false;
-      state.error = action.payload;
+      recalculateCart(state.entity);
     },
     clearCart: (state) => {
-      if (state.entity) {
-        state.entity.products = [];
-      }
+      state.entity = createEmptyCart();
     },
     removeFromCart: (state, action: { payload: number }) => {
-      if (state.entity) {
-        const productId = action.payload;
-        const product = state.entity.products.find((p) => p.id === productId);
-
-        if (product) {
-          state.entity.products = state.entity.products.filter(
-            (p) => p.id !== productId,
-          );
-          state.entity.total -= product.total;
-          state.entity.discountedTotal -= product.discountedTotal;
-          state.entity.totalProducts -= 1;
-          state.entity.totalQuantity -= product.quantity;
-
-          if (!state.entity.products.length) {
-            state.entity.total = 0;
-            state.entity.discountedTotal = 0;
-          }
-        }
-      }
-    },
-    addToCart: (state, action) => {
-      const {
-        id,
-        title,
-        description,
-        price,
-        quantity = 1,
-        discountPercentage,
-        thumbnail,
-      } = action.payload;
-
-      if (!state.entity) {
-        state.entity = {
-          id: 1,
-          products: [],
-          total: 0,
-          discountedTotal: 0,
-          userId: 1,
-          totalProducts: 0,
-          totalQuantity: 0,
-        };
-      }
-
-      const existingProduct = state.entity.products.find(
-        (prod) => prod.id === id,
+      state.entity.products = state.entity.products.filter(
+        (product) => product.id !== action.payload,
       );
+      recalculateCart(state.entity);
+    },
+    addToCart: (state, action: { payload: IProduct }) => {
+      const product = action.payload;
+      const existing = state.entity.products.find((item) => item.id === product.id);
 
-      if (existingProduct) {
-        existingProduct.quantity += quantity;
-        existingProduct.total =
-          existingProduct.price * existingProduct.quantity;
-        existingProduct.discountedTotal =
-          existingProduct.total *
-          (1 - existingProduct.discountPercentage / 100);
+      if (existing) {
+        existing.quantity += 1;
+        existing.total = existing.price * existing.quantity;
+        existing.discountedTotal =
+          existing.total * (1 - existing.discountPercentage / 100);
       } else {
-        const total = price * quantity;
-        const discountedTotal = total * (1 - discountPercentage / 100);
+        const total = product.price;
         state.entity.products.push({
-          id,
-          title,
-          price,
-          quantity,
+          ...product,
+          quantity: 1,
           total,
-          discountPercentage,
-          discountedTotal,
-          thumbnail,
-          description,
+          discountedTotal: total * (1 - product.discountPercentage / 100),
         });
-        state.entity.totalProducts += 1;
       }
 
-      state.entity.total += price * quantity;
-      state.entity.discountedTotal +=
-        price * quantity * (1 - discountPercentage / 100);
-      state.entity.totalQuantity += quantity;
+      recalculateCart(state.entity);
+    },
+    incrementCartItem: (state, action: { payload: number }) => {
+      const existing = state.entity.products.find((item) => item.id === action.payload);
+      if (!existing) return;
+      existing.quantity += 1;
+      existing.total = existing.price * existing.quantity;
+      existing.discountedTotal = existing.total * (1 - existing.discountPercentage / 100);
+      recalculateCart(state.entity);
+    },
+    decrementCartItem: (state, action: { payload: number }) => {
+      const existing = state.entity.products.find((item) => item.id === action.payload);
+      if (!existing) return;
+
+      if (existing.quantity <= 1) {
+        state.entity.products = state.entity.products.filter(
+          (product) => product.id !== action.payload,
+        );
+      } else {
+        existing.quantity -= 1;
+        existing.total = existing.price * existing.quantity;
+        existing.discountedTotal =
+          existing.total * (1 - existing.discountPercentage / 100);
+      }
+      recalculateCart(state.entity);
     },
   },
 });
 
 const { reducer: cartReducer, actions } = cartSlice;
 export const {
-  cartRequested,
-  cartReceived,
-  cartRequestFailed,
+  replaceCart,
   clearCart,
   removeFromCart,
   addToCart,
+  incrementCartItem,
+  decrementCartItem,
 } = actions;
 
-export const loadCartList = () => async (dispatch: Dispatch) => {
-  dispatch(cartRequested());
-  try {
-    const res = await fetch('https://dummyjson.com/carts/1');
-    if (!res.ok) {
-      throw new Error('Не удалось загрузить корзину');
-    }
-    const data = await res.json();
-    dispatch(cartReceived(data));
-  } catch (error) {
-    dispatch(cartRequestFailed((error as Error).message));
-  }
-};
-
 export const getCart = (state: RootState) => state.cart.entity;
-export const getCartLoadingStatus = (state: RootState) => state.cart.isLoading;
+export const getCartProducts = (state: RootState) => state.cart.entity.products;
+export const getCartItemByProductId = (state: RootState, productId: number) =>
+  state.cart.entity.products.find((product) => product.id === productId);
+export const getCartItemQuantity = (state: RootState, productId: number) =>
+  state.cart.entity.products.find((product) => product.id === productId)?.quantity ?? 0;
+export const getCartQuantityById = createSelector([getCartProducts], (products) =>
+  products.reduce<Record<number, number>>((acc, product) => {
+    acc[product.id] = product.quantity;
+    return acc;
+  }, {}),
+);
 
 export default cartReducer;

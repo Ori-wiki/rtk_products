@@ -1,136 +1,54 @@
-// import { Counter } from './pages/Counter';
-import {
-  Button,
-  Divider,
-  Empty,
-  Flex,
-  FloatButton,
-  Modal,
-  Typography,
-} from 'antd';
-
-import Products from './pages/Products';
-import './reset.css';
-import { DeleteOutlined, ShoppingCartOutlined } from '@ant-design/icons';
-import { useEffect, useState } from 'react';
+import { useMemo, useState } from 'react';
+import { App as AntdApp, ConfigProvider, theme } from 'antd';
+import { Navigate, Route, Routes } from 'react-router-dom';
+import CartModal from './components/cart/CartModal';
+import SiteHeader from './components/layout/SiteHeader';
+import { ROUTES } from './constants/routes';
 import { useAppDispatch, useAppSelector } from './hooks/reduxhook';
-import { clearCart, getCart, loadCartList, removeFromCart } from './store/cart';
-
-const { Text, Title } = Typography;
+import Checkout from './pages/Checkout';
+import Favorites from './pages/Favorites';
+import ProductDetails from './pages/ProductDetails';
+import Products from './pages/Products';
+import { getCart } from './store/cart';
+import { getThemeMode, toggleTheme } from './store/theme';
+import './reset.css';
 
 function App() {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isCartOpen, setIsCartOpen] = useState(false);
   const dispatch = useAppDispatch();
   const cart = useAppSelector(getCart);
-  console.log(cart);
+  const themeMode = useAppSelector(getThemeMode);
+  const isDark = themeMode === 'dark';
 
-  const showModal = () => {
-    setIsModalOpen(true);
-  };
-
-  const handleOk = () => {
-    setIsModalOpen(false);
-  };
-
-  const handleCancel = () => {
-    setIsModalOpen(false);
-  };
-
-  useEffect(() => {
-    dispatch(loadCartList());
-  }, [dispatch]);
-
-  const totalAmount =
-    cart?.products.reduce((sum, product) => sum + (product.total || 0), 0) || 0;
+  const antdTheme = useMemo(
+    () => ({
+      algorithm: isDark ? theme.darkAlgorithm : theme.defaultAlgorithm,
+      token: { colorPrimary: '#1677ff', borderRadius: 10 },
+    }),
+    [isDark],
+  );
 
   return (
-    <>
-      {/* <Counter /> */}
-      <FloatButton
-        onClick={showModal}
-        style={{ width: '50px', height: '50px' }}
-        tooltip='Корзина'
-        badge={{ count: cart?.totalProducts || 0, color: 'red' }}
-        icon={<ShoppingCartOutlined />}
-      />
-      <Modal
-        title={<Title level={4}>Корзина</Title>}
-        open={isModalOpen}
-        onOk={handleOk}
-        onCancel={handleCancel}
-        footer={[
-          <Button key='cancel' onClick={handleCancel}>
-            Закрыть
-          </Button>,
-          <Button
-            key='submit'
-            type='primary'
-            onClick={handleOk}
-            disabled={!cart || cart.products.length === 0}
-          >
-            Оформить заказ
-          </Button>,
-        ]}
-        width={600}
-      >
-        {cart && cart.products.length > 0 ? (
-          <Flex vertical gap={16}>
-            <Flex vertical gap={8}>
-              {cart.products.map((product) => (
-                <Flex
-                  key={product.id}
-                  justify='space-between'
-                  align='center'
-                  style={{
-                    padding: '12px',
-                    border: '1px solid #f0f0f0',
-                    borderRadius: '8px',
-                    background: '#fafafa',
-                  }}
-                >
-                  <Flex vertical style={{ flex: 1 }}>
-                    <Text strong>{product.title}</Text>
-                    <Text type='secondary'>
-                      Цена: ${product.price} × {product.quantity} = $
-                      {product.total}
-                    </Text>
-                  </Flex>
-                  <Button
-                    danger
-                    icon={<DeleteOutlined />}
-                    onClick={() => dispatch(removeFromCart(product.id))}
-                  />
-                </Flex>
-              ))}
-            </Flex>
+    <ConfigProvider theme={antdTheme}>
+      <AntdApp>
+        <SiteHeader
+          cartCount={cart.totalProducts}
+          onOpenCart={() => setIsCartOpen(true)}
+          darkMode={isDark}
+          onThemeToggle={() => dispatch(toggleTheme())}
+        />
 
-            <Divider />
-            <Flex justify='space-between' align='center'>
-              <Text strong>Итого:</Text>
-              <Text strong style={{ fontSize: '18px', color: '#1890ff' }}>
-                ${totalAmount.toFixed(2)}
-              </Text>
-            </Flex>
+        <CartModal open={isCartOpen} cart={cart} onClose={() => setIsCartOpen(false)} />
 
-            <Button
-              type='link'
-              danger
-              onClick={() => dispatch(clearCart())}
-              style={{ padding: 0, marginTop: '8px' }}
-            >
-              Очистить корзину
-            </Button>
-          </Flex>
-        ) : (
-          <Empty
-            image={Empty.PRESENTED_IMAGE_SIMPLE}
-            description='Ваша корзина пуста'
-            style={{ margin: '24px 0' }}
-          />
-        )}
-      </Modal>
-      <Products />;
-    </>
+        <Routes>
+          <Route path={ROUTES.root} element={<Navigate to={ROUTES.products} replace />} />
+          <Route path={ROUTES.products} element={<Products />} />
+          <Route path={ROUTES.productDetails} element={<ProductDetails />} />
+          <Route path={ROUTES.favorites} element={<Favorites />} />
+          <Route path={ROUTES.checkout} element={<Checkout />} />
+        </Routes>
+      </AntdApp>
+    </ConfigProvider>
   );
 }
 

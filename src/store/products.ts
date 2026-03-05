@@ -1,32 +1,40 @@
-import { createSlice, type Dispatch } from '@reduxjs/toolkit';
+import { createSelector, createSlice, type Dispatch } from '@reduxjs/toolkit';
 import type { RootState } from './store';
+
+export interface IReview {
+  reviewerName: string;
+  rating: number;
+  comment: string;
+}
 
 export interface IProduct {
   id: number;
   title: string;
   price: number;
-  quantity: number;
-  total: number;
   discountPercentage: number;
-  discountedTotal: number;
+  rating: number;
+  stock: number;
+  category: string;
   thumbnail: string;
+  images: string[];
   description: string;
 }
 
 export interface IProductState {
-  entitties: IProduct[];
+  entities: IProduct[];
   isLoading: boolean;
   error: string | null;
   lastFetch: string | null;
 }
+
 const initialState: IProductState = {
-  entitties: [],
+  entities: [],
   isLoading: false,
   error: null,
   lastFetch: null,
 };
 
-export const productsSlice = createSlice({
+const productsSlice = createSlice({
   name: 'products',
   initialState,
   reducers: {
@@ -34,13 +42,11 @@ export const productsSlice = createSlice({
       state.isLoading = true;
       state.error = null;
     },
-
     productsReceived: (state, action: { payload: IProduct[] }) => {
-      state.entitties = action.payload;
+      state.entities = action.payload;
       state.isLoading = false;
       state.lastFetch = new Date().toISOString();
     },
-
     productsRequestFailed: (state, action: { payload: string }) => {
       state.isLoading = false;
       state.error = action.payload;
@@ -52,29 +58,35 @@ const { reducer: productsReducer, actions } = productsSlice;
 const { productsRequested, productsReceived, productsRequestFailed } = actions;
 
 export const loadProductsList =
-  () => async (dispatch: Dispatch, getState: () => RootState) => {
+  (force = false) =>
+  async (dispatch: Dispatch, getState: () => RootState) => {
     const { lastFetch } = getState().products;
-    const isOutDated = lastFetch
-      ? (new Date().getTime() - new Date(lastFetch).getTime()) / 1000 / 60 > 10
+    const isOutdated = lastFetch
+      ? (Date.now() - new Date(lastFetch).getTime()) / 1000 / 60 > 10
       : true;
 
-    if (isOutDated) {
-      dispatch(productsRequested());
-      try {
-        const res = await fetch('https://dummyjson.com/products');
-        if (!res.ok) {
-          throw new Error('Не удалось загрузить продукты');
-        }
-        const data = await res.json();
-        dispatch(productsReceived(data.products));
-      } catch (error) {
-        dispatch(productsRequestFailed((error as Error).message));
+    if (!force && !isOutdated) return;
+
+    dispatch(productsRequested());
+    try {
+      const res = await fetch('https://dummyjson.com/products?limit=100');
+      if (!res.ok) {
+        throw new Error('Не удалось загрузить товары');
       }
+      const data = await res.json();
+      dispatch(productsReceived(data.products));
+    } catch (error) {
+      dispatch(productsRequestFailed((error as Error).message));
     }
   };
 
-export const getProducts = (state: RootState) => state.products.entitties;
-export const getProductsLoadingStatus = (state: RootState) =>
-  state.products.isLoading;
+export const getProducts = (state: RootState) => state.products.entities;
+export const getProductsLoadingStatus = (state: RootState) => state.products.isLoading;
+export const getProductsError = (state: RootState) => state.products.error;
+export const getProductById = (state: RootState, id: number) =>
+  state.products.entities.find((product) => product.id === id);
+export const getProductCategories = createSelector([getProducts], (products) =>
+  Array.from(new Set(products.map((product) => product.category))).sort(),
+);
 
 export default productsReducer;
